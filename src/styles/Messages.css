@@ -1,0 +1,9 @@
+.mainContainer {
+  width: 1000px;
+  height: 750px;
+  border: solid #1890ff;
+  border-radius: 10px;
+  margin: auto;
+  margin-top: 60px;
+  overflow: hidden scroll;
+}
