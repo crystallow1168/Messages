@@ -1,9 +1,25 @@
 .mainContainer {
   width: 1000px;
-  height: 750px;
-  border: solid #1890ff;
+  height: 620px;
+  box-shadow: 0px 0px 3px 0px #4c7de0;
   border-radius: 10px;
   margin: auto;
-  margin-top: 60px;
   overflow: hidden scroll;
+}
+
+.paginationContainer {
+  display: flex;
+  justify-content: flex-end;
+  margin: 50px 90px 0px;
+}
+
+.pagination {
+  width: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+.active {
+  color: #1890ff
 }

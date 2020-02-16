@@ -1,12 +1,17 @@
 import React, { Component } from 'React';
+import ReactPaginate from 'react-paginate';
 import '../styles/Messages.css';
 import Message from './Message';
 
 import { messages as data } from '../../data.json';
 
 type State = {
-	page: number;
+	offset: number;
 	messages: MessageType[];
+	pageCount: number;
+	currentPage: number;
+	pageView: MessageType[];
+	perPage: number;
 };
 
 export type MessageType = {
@@ -18,8 +23,12 @@ export type MessageType = {
 
 class Messages extends Component {
 	state: State = {
-		page: 0,
-		messages: []
+		offset: 0,
+		messages: [],
+		pageCount: Math.ceil(data.length / 5),
+		currentPage: 0,
+		pageView: [],
+		perPage: 5
 	};
 
 	componentDidMount() {
@@ -28,7 +37,7 @@ class Messages extends Component {
 
 	filtered = (messages: MessageType[]): void => {
 		const storage: any = {};
-		const filteredMessages = [];
+		let filteredMessages = [];
 
 		for (let i = 0; i < messages.length; i++) {
 			const message = messages[i];
@@ -44,40 +53,90 @@ class Messages extends Component {
 			}
 		}
 
-		this.setState({
-			messages: filteredMessages
-		});
+		filteredMessages = filteredMessages.sort(
+			(a: MessageType, b: MessageType): number => {
+				if (a.sentAt > b.sentAt) return 1;
+				else if (a.sentAt < b.sentAt) return -1;
+				else return 0;
+			}
+		);
+
+		this.setState(
+			{
+				messages: filteredMessages
+			},
+			() => this.handleMessagesForCurrentPage()
+		);
 	};
 
 	deleteMessage = (idx: number): void => {
-		console.log(idx);
 		const messages = [...this.state.messages];
 		messages.splice(idx, 1);
 
-		this.setState({
-			messages
-		});
+		this.setState(
+			{
+				messages
+			},
+			() => this.handleMessagesForCurrentPage()
+		);
 	};
 
+	handlePageClick = (page: any) => {
+		let selected = page.selected;
+		let offset = Math.ceil(selected * this.state.perPage);
+
+		this.setState(
+			{
+				currentPage: selected,
+				offset: offset
+			},
+			() => {
+				this.handleMessagesForCurrentPage();
+			}
+		);
+	};
+
+	handleMessagesForCurrentPage() {
+		let messages = this.state.messages.slice(
+			this.state.offset,
+			this.state.offset + this.state.perPage
+		);
+		this.setState({ pageView: messages });
+		console.log(this.state.pageView);
+	}
+
 	render() {
-		const { messages } = this.state;
-		console.log(messages);
+		const { pageView, pageCount, perPage } = this.state;
 
 		return (
-			<div className="mainContainer">
-				<div>
-					{messages.map((message, idx) => {
-						return (
-							<Message
-								message={message}
-								key={idx}
-								id={idx}
-								deleteMessage={this.deleteMessage}
-							/>
-						);
-					})}
+			<>
+				<div className="paginationContainer">
+					<ReactPaginate
+						previousLabel={'←'}
+						nextLabel={'→'}
+						pageCount={pageCount}
+						marginPagesDisplayed={2}
+						pageRangeDisplayed={perPage}
+						onPageChange={this.handlePageClick}
+						containerClassName={'pagination'}
+						activeClassName={'active'}
+					/>
 				</div>
-			</div>
+				<div className="mainContainer">
+					<div>
+						{pageView.map((message, idx) => {
+							return (
+								<Message
+									message={message}
+									key={idx}
+									id={idx}
+									deleteMessage={this.deleteMessage}
+								/>
+							);
+						})}
+					</div>
+				</div>
+			</>
 		);
 	}
 }

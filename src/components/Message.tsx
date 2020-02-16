@@ -18,20 +18,20 @@ const Message = (props: MessageProps): JSX.Element => {
 
 	return (
 		<div className="messageContainer">
-			<div className="innerContainer">
-				<div>{time}</div>
-				<div>uuid: {uuid}</div>
-				<div>content: {content} </div>
-				<div>{senderUuid}</div>
+			<div className="leftContainer">
+				<div>UUID: {uuid}</div>
+				<div>Content: {content} </div>
+				<div>Sender UUID: {senderUuid}</div>
 			</div>
-			<div className="button">
+			<div className="rightContainer">
 				<button
 					type="button"
-					className="btn btn-danger"
+					className="btn btn-outline-primary"
 					onClick={() => deleteMessage(id)}
 				>
 					Delete
 				</button>
+				<div className="time">sent: {time}</div>
 			</div>
 		</div>
 	);
