@@ -12,21 +12,3 @@
   justify-content: flex-end;
   margin: 50px 90px 0px;
 }
-
-.pagination {
-  width: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  cursor: default;
-}
-
-.pagination>li>a:hover,
-.pagination>.disabled>span:hover {
-  color: #1890ff;
-}
-
-.active {
-
-  color: #4c7de0;
-}

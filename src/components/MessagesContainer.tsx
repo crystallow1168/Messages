@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
-import ReactPaginate from 'react-paginate';
-import '../styles/Messages.css';
+import Pagination from 'rc-pagination';
+
 import Message from './Message';
 
 import { messages as data } from '../../data.json';
+
+import '../styles/MessagesContainer.css';
+import 'rc-pagination/assets/index.css';
 
 interface MessagesContainerProps {
 	perPage: number;
@@ -12,7 +15,6 @@ interface MessagesContainerProps {
 interface MessagesContainerState {
 	offset: number;
 	messages: MessageType[];
-	pageCount: number;
 	currentPage: number;
 	currentPageView: MessageType[];
 }
@@ -28,8 +30,7 @@ class MessagesContainer extends Component<MessagesContainerProps> {
 	state: MessagesContainerState = {
 		offset: 0,
 		messages: [],
-		pageCount: Math.ceil(data.length / 5),
-		currentPage: 0,
+		currentPage: 1,
 		currentPageView: []
 	};
 
@@ -73,58 +74,53 @@ class MessagesContainer extends Component<MessagesContainerProps> {
 		);
 	};
 
-	// delete current message
-	deleteMessage = (uniqueID: string): void => {
-		let { currentPage, pageCount, messages } = this.state;
+	// Move view away from currently viewed empty page
+	handleEmptyPage = () => {
+		let { currentPage, messages } = this.state;
 		let { perPage } = this.props;
-		const copyMessages = [...messages];
-		const idx = messages.findIndex(message => message.sentAt === uniqueID);
-		copyMessages.splice(idx, 1);
+		const pageCount = Math.ceil(messages.length / 5);
 
-		// remove page if last page is empty
 		if (this.isPageEmpty() === true) {
-			this.setState(
-				{
-					messages: copyMessages,
-					pageCount: Math.ceil(copyMessages.length / perPage)
-				},
-				() => this.handleMessagesForCurrentPage()
-			);
-
-			let offset = Math.ceil((currentPage - 2) * perPage);
-			if (currentPage > pageCount - 2) {
-				this.setState({ currentPage: currentPage - 1, offset }, () => {
-					const page: { selected: number } = {
-						selected: this.state.currentPage
-					};
-					this.handlePageClick(page);
-				});
+			if (currentPage > pageCount) {
+				const newCurrentPage = currentPage - 1;
+				this.setState(
+					{
+						currentPage: newCurrentPage,
+						offset: newCurrentPage * perPage
+					},
+					() => this.handlePageClick(newCurrentPage)
+				);
 			}
-		} else {
-			this.setState(
-				{
-					messages: copyMessages
-				},
-				() => this.handleMessagesForCurrentPage()
-			);
-		}
+		} else this.handleMessagesForCurrentPage();
 	};
 
-	// handle view to clicked page
-	handlePageClick = (page: any) => {
-		const { perPage } = this.props;
+	// delete selected message
+	deleteMessage = (uniqueID: string): void => {
+		let { messages } = this.state;
+		const copyMessages = [...messages];
+		const idx = messages.findIndex(message => message.sentAt === uniqueID);
 
-		let selected = page.selected;
-		let offset = Math.ceil(selected * perPage);
+		copyMessages.splice(idx, 1);
 
 		this.setState(
 			{
-				currentPage: selected,
-				offset: offset
+				messages: copyMessages
 			},
-			() => {
-				this.handleMessagesForCurrentPage();
-			}
+			() => this.handleEmptyPage()
+		);
+	};
+
+	// handle view to clicked page
+	handlePageClick = (selectedPage: any) => {
+		const { perPage } = this.props;
+		const offset = (selectedPage - 1) * perPage;
+
+		this.setState(
+			{
+				currentPage: selectedPage,
+				offset
+			},
+			() => this.handleMessagesForCurrentPage()
 		);
 	};
 
@@ -137,33 +133,31 @@ class MessagesContainer extends Component<MessagesContainerProps> {
 		this.setState({ currentPageView: handleMessagesForCurrentPage });
 	}
 
-	// to check if page is empty
+	// // to check if page is empty
 	isPageEmpty() {
-		const { messages, pageCount } = this.state;
+		const { messages } = this.state;
+		const { perPage } = this.props;
 
-		if (messages.length % pageCount === 0) {
+		if (messages.length % perPage === 0) {
 			return true;
 		}
-
 		return false;
 	}
 
 	render() {
-		const { currentPageView, pageCount } = this.state;
+		const { currentPageView, currentPage, messages } = this.state;
 		const { perPage } = this.props;
 
 		return (
 			<>
 				<div className="paginationContainer">
-					<ReactPaginate
-						previousLabel={'←'}
-						nextLabel={'→'}
-						pageCount={pageCount}
-						marginPagesDisplayed={2}
-						pageRangeDisplayed={perPage}
-						onPageChange={this.handlePageClick}
-						containerClassName={'pagination'}
-						activeClassName={'active'}
+					<Pagination
+						defaultCurrent={0}
+						current={currentPage}
+						defaultPageSize={perPage}
+						onChange={this.handlePageClick}
+						hideOnSinglePage={true}
+						total={messages.length}
 					/>
 				</div>
 				<div className="mainContainer">
