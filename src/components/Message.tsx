@@ -1,25 +1,21 @@
-//`sentAt` in either ascending or descending order.
-
-import React from 'React';
+import React from 'react';
 import '../styles/Message.css';
-import { MessageType } from './Messages';
+import { MessageType } from './MessagesContainer';
 import moment from 'moment';
 
 type MessageProps = {
 	message: MessageType;
-	id: number;
-	deleteMessage: (messageIdx: number) => void;
+	deleteMessage: (messageIdx: string) => void;
 };
 
 const Message = (props: MessageProps): JSX.Element => {
-	const { sentAt, uuid, content, senderUuid } = props.message;
-	const { id, deleteMessage } = props;
-	const time = moment(sentAt).format('dddd, MMMM Do YYYY');
+	const { sentAt, content, senderUuid } = props.message;
+	const { deleteMessage } = props;
+	const time = moment(sentAt).format('dddd MMMM Do, YYYY');
 
 	return (
 		<div className="messageContainer">
 			<div className="leftContainer">
-				<div>UUID: {uuid}</div>
 				<div>Content: {content} </div>
 				<div>Sender UUID: {senderUuid}</div>
 			</div>
@@ -27,7 +23,7 @@ const Message = (props: MessageProps): JSX.Element => {
 				<button
 					type="button"
 					className="btn btn-outline-primary"
-					onClick={() => deleteMessage(id)}
+					onClick={() => deleteMessage(sentAt)}
 				>
 					Delete
 				</button>

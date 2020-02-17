@@ -1,5 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Messages from './components/Messages';
+import Messages from './components/MessagesContainer';
 
-ReactDOM.render(<Messages />, document.getElementById('root'));
+ReactDOM.render(<Messages perPage={5} />, document.getElementById('root'));

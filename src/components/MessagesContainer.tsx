@@ -1,18 +1,21 @@
-import React, { Component } from 'React';
+import React, { Component } from 'react';
 import ReactPaginate from 'react-paginate';
 import '../styles/Messages.css';
 import Message from './Message';
 
 import { messages as data } from '../../data.json';
 
-type State = {
+interface MessagesContainerProps {
+	perPage: number;
+}
+
+interface MessagesContainerState {
 	offset: number;
 	messages: MessageType[];
 	pageCount: number;
 	currentPage: number;
-	pageView: MessageType[];
-	perPage: number;
-};
+	currentPageView: MessageType[];
+}
 
 export type MessageType = {
 	sentAt: string;
@@ -21,20 +24,20 @@ export type MessageType = {
 	senderUuid: string;
 };
 
-class Messages extends Component {
-	state: State = {
+class MessagesContainer extends Component<MessagesContainerProps> {
+	state: MessagesContainerState = {
 		offset: 0,
 		messages: [],
 		pageCount: Math.ceil(data.length / 5),
 		currentPage: 0,
-		pageView: [],
-		perPage: 5
+		currentPageView: []
 	};
 
 	componentDidMount() {
 		this.filtered(data);
 	}
 
+	// filter data to remove duplicate messages
 	filtered = (messages: MessageType[]): void => {
 		const storage: any = {};
 		let filteredMessages = [];
@@ -53,6 +56,7 @@ class Messages extends Component {
 			}
 		}
 
+		// sorting messages by earliest to latest sentAt
 		filteredMessages = filteredMessages.sort(
 			(a: MessageType, b: MessageType): number => {
 				if (a.sentAt > b.sentAt) return 1;
@@ -69,21 +73,49 @@ class Messages extends Component {
 		);
 	};
 
-	deleteMessage = (idx: number): void => {
-		const messages = [...this.state.messages];
-		messages.splice(idx, 1);
+	// delete current message
+	deleteMessage = (uniqueID: string): void => {
+		let { currentPage, pageCount, messages } = this.state;
+		let { perPage } = this.props;
+		const copyMessages = [...messages];
+		const idx = messages.findIndex(message => message.sentAt === uniqueID);
+		copyMessages.splice(idx, 1);
 
-		this.setState(
-			{
-				messages
-			},
-			() => this.handleMessagesForCurrentPage()
-		);
+		// remove page if last page is empty
+		if (this.isPageEmpty() === true) {
+			this.setState(
+				{
+					messages: copyMessages,
+					pageCount: Math.ceil(copyMessages.length / perPage)
+				},
+				() => this.handleMessagesForCurrentPage()
+			);
+
+			let offset = Math.ceil((currentPage - 2) * perPage);
+			if (currentPage > pageCount - 2) {
+				this.setState({ currentPage: currentPage - 1, offset }, () => {
+					const page: { selected: number } = {
+						selected: this.state.currentPage
+					};
+					this.handlePageClick(page);
+				});
+			}
+		} else {
+			this.setState(
+				{
+					messages: copyMessages
+				},
+				() => this.handleMessagesForCurrentPage()
+			);
+		}
 	};
 
+	// handle view to clicked page
 	handlePageClick = (page: any) => {
+		const { perPage } = this.props;
+
 		let selected = page.selected;
-		let offset = Math.ceil(selected * this.state.perPage);
+		let offset = Math.ceil(selected * perPage);
 
 		this.setState(
 			{
@@ -96,17 +128,29 @@ class Messages extends Component {
 		);
 	};
 
+	// find messages for current page
 	handleMessagesForCurrentPage() {
-		let messages = this.state.messages.slice(
-			this.state.offset,
-			this.state.offset + this.state.perPage
-		);
-		this.setState({ pageView: messages });
-		console.log(this.state.pageView);
+		const { offset, messages } = this.state;
+		const { perPage } = this.props;
+
+		let handleMessagesForCurrentPage = messages.slice(offset, offset + perPage);
+		this.setState({ currentPageView: handleMessagesForCurrentPage });
+	}
+
+	// to check if page is empty
+	isPageEmpty() {
+		const { messages, pageCount } = this.state;
+
+		if (messages.length % pageCount === 0) {
+			return true;
+		}
+
+		return false;
 	}
 
 	render() {
-		const { pageView, pageCount, perPage } = this.state;
+		const { currentPageView, pageCount } = this.state;
+		const { perPage } = this.props;
 
 		return (
 			<>
@@ -124,12 +168,11 @@ class Messages extends Component {
 				</div>
 				<div className="mainContainer">
 					<div>
-						{pageView.map((message, idx) => {
+						{currentPageView.map((message, idx) => {
 							return (
 								<Message
 									message={message}
 									key={idx}
-									id={idx}
 									deleteMessage={this.deleteMessage}
 								/>
 							);
@@ -141,4 +184,4 @@ class Messages extends Component {
 	}
 }
 
-export default Messages;
+export default MessagesContainer;
