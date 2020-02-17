@@ -17,6 +17,7 @@ interface MessagesContainerState {
 	messages: MessageType[];
 	currentPage: number;
 	currentPageView: MessageType[];
+	sortBy: string;
 }
 
 export type MessageType = {
@@ -31,7 +32,8 @@ class MessagesContainer extends Component<MessagesContainerProps> {
 		offset: 0,
 		messages: [],
 		currentPage: 1,
-		currentPageView: []
+		currentPageView: [],
+		sortBy: 'earliest'
 	};
 
 	componentDidMount() {
@@ -57,15 +59,6 @@ class MessagesContainer extends Component<MessagesContainerProps> {
 			}
 		}
 
-		// sorting messages by earliest to latest sentAt
-		filteredMessages = filteredMessages.sort(
-			(a: MessageType, b: MessageType): number => {
-				if (a.sentAt > b.sentAt) return 1;
-				else if (a.sentAt < b.sentAt) return -1;
-				else return 0;
-			}
-		);
-
 		this.setState(
 			{
 				messages: filteredMessages
@@ -74,7 +67,7 @@ class MessagesContainer extends Component<MessagesContainerProps> {
 		);
 	};
 
-	// Move view away from currently viewed empty page
+	// move view away from currently viewed empty page
 	handleEmptyPage = () => {
 		let { currentPage, messages } = this.state;
 		let { perPage } = this.props;
@@ -133,23 +126,95 @@ class MessagesContainer extends Component<MessagesContainerProps> {
 		this.setState({ currentPageView: handleMessagesForCurrentPage });
 	}
 
-	// // to check if page is empty
+	// check if page is empty
 	isPageEmpty() {
 		const { messages } = this.state;
 		const { perPage } = this.props;
 
-		if (messages.length % perPage === 0) {
-			return true;
-		}
+		if (messages.length % perPage === 0) return true;
 		return false;
 	}
 
+	//sort by earliest messages first
+	handleAscendingOrder() {
+		let { messages } = this.state;
+		messages = messages.sort((a: MessageType, b: MessageType): number => {
+			if (a.sentAt > b.sentAt) return 1;
+			else if (a.sentAt < b.sentAt) return -1;
+			else return 0;
+		});
+		this.setState({ sortBy: 'earliest' }, () =>
+			this.handleMessagesForCurrentPage()
+		);
+	}
+
+	//sort by latest messages first
+	handleDescendingOrder() {
+		let { messages } = this.state;
+		messages = messages.sort((a: MessageType, b: MessageType): number => {
+			if (a.sentAt < b.sentAt) return 1;
+			else if (a.sentAt > b.sentAt) return -1;
+			else return 0;
+		});
+		this.setState({ sortBy: 'latest' }, () =>
+			this.handleMessagesForCurrentPage()
+		);
+	}
+
 	render() {
-		const { currentPageView, currentPage, messages } = this.state;
+		let { currentPageView, currentPage, messages, sortBy } = this.state;
 		const { perPage } = this.props;
 
+		let view;
+
+		view =
+			messages.length === 0 ? (
+				<img
+					src="https://cdn.dribbble.com/users/99954/screenshots/6669081/no_messages_blank_state_1x.png"
+					alt="blankState"
+					height="620"
+					width="1000"
+				></img>
+			) : (
+				currentPageView.map((message, idx) => {
+					return (
+						<Message
+							message={message}
+							key={idx}
+							deleteMessage={this.deleteMessage}
+						/>
+					);
+				})
+			);
+
 		return (
-			<>
+			<div className="container">
+				<div className="sortContainer">
+					<div className="btn-group">
+						<button
+							className="btn btn-lg dropdown-toggle"
+							type="button"
+							data-toggle="dropdown"
+							aria-expanded="false"
+						>
+							Sort by
+						</button>
+						<ul className="dropdown-menu">
+							<li onClick={() => this.handleAscendingOrder()}>
+								{' '}
+								&nbsp; Earliest
+							</li>
+							<div className="dropdown-divider"></div>
+							<li onClick={() => this.handleDescendingOrder()}>
+								{' '}
+								&nbsp; Latest
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div className="mainContainer">
+					<div> {view}</div>
+				</div>
 				<div className="paginationContainer">
 					<Pagination
 						defaultCurrent={0}
@@ -160,20 +225,7 @@ class MessagesContainer extends Component<MessagesContainerProps> {
 						total={messages.length}
 					/>
 				</div>
-				<div className="mainContainer">
-					<div>
-						{currentPageView.map((message, idx) => {
-							return (
-								<Message
-									message={message}
-									key={idx}
-									deleteMessage={this.deleteMessage}
-								/>
-							);
-						})}
-					</div>
-				</div>
-			</>
+			</div>
 		);
 	}
 }
