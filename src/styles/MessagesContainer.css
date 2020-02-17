@@ -12,14 +12,3 @@
   justify-content: flex-end;
   margin: 50px 90px 0px;
 }
-
-.pagination {
-  width: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-}
-
-.active {
-  color: #1890ff
-}

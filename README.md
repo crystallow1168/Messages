@@ -1,3 +1,10 @@
+## Starting the app:
+
+1. In your terminal, navigate to this folder directory.
+2. Run `npm install` inside the client directory to install dependencies.
+3. Start the application by running `npm start` in the terminal.
+4. Open application on http://localhost:8080/
+
 ## The Problem: Chat Messages
 
 We have a small dataset of chat messages in a `JSON` file that we need to display
